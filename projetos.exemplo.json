@@ -1,0 +1,11 @@
+{
+  "projetos": [
+    {"id": "automacao", "nome": "Automação", "cor": "#8b5cf6",
+     "itens": ["c:n8n", "w:https://n8n.exemplo.com/healthz", "s:cron"]},
+    {"id": "whatsapp", "nome": "WhatsApp", "cor": "#22c55e",
+     "itens": ["c:evolution-api", "c:evolution-postgres", "c:evolution-redis"]},
+    {"id": "infra", "nome": "Servidor", "cor": "#3b82f6",
+     "itens": ["c:traefik", "s:docker", "s:ssh"]}
+  ],
+  "nomes": {"evolution-postgres": "banco (postgres)", "traefik": "traefik (https)"}
+}

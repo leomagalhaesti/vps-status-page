@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status do servidor</title>
+<style>
+:root{--bg:#f4f5f7;--side:#ffffff;--card:#ffffff;--line:#e4e6eb;--txt:#16181d;--mut:#6b7280;--soft:#f0f1f4;
+--ok:#16a34a;--okbg:#dcfce7;--err:#dc2626;--errbg:#fee2e2;--warn:#d97706;--warnbg:#fef3c7;--acc:#2563eb;--bar:#e5e7eb}
+@media (prefers-color-scheme:dark){:root{--bg:#0d0f13;--side:#13161c;--card:#171a21;--line:#262a33;--txt:#e7e9ee;--mut:#8b93a1;--soft:#1e222a;
+--ok:#22c55e;--okbg:#0f2a1a;--err:#f87171;--errbg:#2c1416;--warn:#fbbf24;--warnbg:#2b2210;--acc:#60a5fa;--bar:#262a33}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--acc);text-decoration:none}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.mut{color:var(--mut)}
+#app{display:flex;min-height:100vh}
+aside{width:240px;flex:none;background:var(--side);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;padding:4px 8px 18px}
+.logo i{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#22c55e,#16a34a);display:grid;place-items:center;color:#fff;font-style:normal;font-size:15px}
+.sec{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:14px 8px 6px}
+.nav{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:7px;color:var(--txt);cursor:pointer}
+.nav:hover{background:var(--soft)}
+.nav .sq{width:10px;height:10px;border-radius:3px;flex:none}
+.nav .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.dot.err{background:var(--err)}.dot.warn{background:var(--warn)}
+main{flex:1;min-width:0;padding:24px 28px 60px;max-width:1200px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:22px;margin:0}
+h2{font-size:16px;margin:0;display:flex;align-items:center;gap:9px}
+.banner{border-radius:10px;padding:12px 16px;margin-bottom:18px;border:1px solid transparent}
+.banner.ok{background:var(--okbg);color:var(--ok)}
+.banner.err{background:var(--errbg);color:var(--err)}
+.banner.warn{background:var(--warnbg);color:var(--warn)}
+.banner b{display:block;margin-bottom:2px}
+.banner ul{margin:4px 0 0;padding-left:18px;color:var(--txt)}
+.grid{display:grid;gap:12px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.metric .lab{color:var(--mut);font-size:12px}
+.metric .val{font-size:22px;font-weight:650;margin:2px 0 8px}
+.metric .val small{font-size:12px;color:var(--mut);font-weight:400}
+.bar{height:6px;background:var(--bar);border-radius:3px;overflow:hidden}
+.bar span{display:block;height:100%;background:var(--ok);border-radius:3px}
+.bar span.warn{background:var(--warn)}.bar span.err{background:var(--err)}
+.proj{margin-top:28px}
+.proj-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px}
+.svc{cursor:pointer;display:flex;flex-direction:column;gap:8px;transition:border-color .15s}
+.svc:hover{border-color:var(--acc)}
+.svc.nolog{cursor:default}.svc.nolog:hover{border-color:var(--line)}
+.svc-h{display:flex;align-items:center;gap:10px}
+.ico{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;font-size:14px}
+.svc-n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{font-size:11px;color:var(--mut)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 9px;border-radius:99px;background:var(--okbg);color:var(--ok);white-space:nowrap}
+.pill.err{background:var(--errbg);color:var(--err)}.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pill .dot{width:6px;height:6px}
+.row{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mut)}
+.row b{color:var(--txt);font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:12px}
+.stat .k{font-size:12px;color:var(--mut)}.stat .v{font-size:18px;font-weight:650}
+.stat .v small{font-size:12px;font-weight:400;color:var(--mut)}
+.wide{margin-bottom:12px}
+.list{margin:0;padding:0;list-style:none}
+.list li{padding:6px 0;border-top:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}
+.list li:first-child{border-top:0}
+.sub{font-size:12px;color:var(--mut)}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+#modal .box{background:var(--card);border:1px solid var(--line);border-radius:12px;width:min(900px,100%);max-height:85vh;display:flex;flex-direction:column}
+#modal .bh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+#modal pre{margin:0;padding:14px 16px;overflow:auto;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+button{font:inherit;border:1px solid var(--line);background:var(--soft);color:var(--txt);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+#login{max-width:360px;margin:12vh auto;padding:0 16px}
+#login input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--txt);font:inherit;margin:10px 0}
+#burger{display:none}
+@media (max-width:900px){
+ .g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:700px){
+ #app{display:block}
+ aside{position:sticky;top:0;width:auto;height:auto;padding:10px 16px;border-right:0;border-bottom:1px solid var(--line);z-index:5}
+ .logo{padding:0}
+ #burger{display:block;margin-left:auto;padding:4px 10px}
+ #navs{display:none}#navs.open{display:block;padding-top:8px}
+ main{padding:16px 16px 60px}
+ .g3{grid-template-columns:minmax(0,1fr)}
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <div class="card">
+    <h2>Status do servidor</h2>
+    <p class="mut">Digite a senha do painel. Ela fica guardada neste aparelho por 30 dias.</p>
+    <form id="lf"><input id="senha" type="password" autocomplete="current-password" placeholder="Senha"><button class="pri" style="width:100%">Entrar</button></form>
+    <p id="lerr" class="sub" style="color:var(--err)"></p>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <aside>
+    <div class="logo"><i>◆</i><span>meu-servidor</span><button id="burger" aria-label="Menu">☰</button></div>
+    <div id="navs">
+      <div class="sec">Servidor</div>
+      <div class="nav" data-go="topo"><span class="dot" id="navdot"></span><span class="nm">Visão geral</span></div>
+      <div class="sec">Projetos</div>
+      <div id="navp"></div>
+    </div>
+  </aside>
+  <main>
+    <div class="top" id="topo">
+      <div><h1>Visão geral</h1><div class="sub" id="upd"></div></div>
+      <div class="sub">Hostinger KVM 2 · atualiza sozinho a cada 20 s</div>
+    </div>
+    <div id="banner"></div>
+    <div class="grid g4" id="metrics"></div>
+    <div id="projs"></div>
+  </main>
+</div>
+
+<div id="modal"><div class="box"><div class="bh"><b id="mt"></b><button onclick="fecha()">Fechar</button></div><pre class="mono" id="mp">…</pre></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const gb=b=>b>=1073741824?(b/1073741824).toFixed(1)+" GB":(b/1048576).toFixed(0)+" MB";
+const dur=s=>{s=Math.max(0,s|0);const d=s/86400|0,h=s%86400/3600|0,m=s%3600/60|0;return d?`${d}d ${h}h`:h?`${h}h ${m}min`:`${m}min`};
+const desde=iso=>{const t=Date.parse(iso);return isNaN(t)||t<1e12?"":dur((Date.now()-t)/1000)};
+const quando=iso=>{const t=Date.parse(iso);if(isNaN(t))return"";const s=(Date.now()-t)/1000;return s<3600?`há ${s/60|0} min`:s<86400?`há ${s/3600|0} h`:`há ${s/86400|0} dias`};
+const nivel=p=>p<70?"":p<85?"warn":"err";
+
+function metric(lab,val,sub,pct){
+  return `<div class="card metric"><div class="lab">${lab}</div><div class="val">${val} <small>${sub}</small></div>`+
+    (pct==null?`<div class="bar"></div>`:`<div class="bar"><span class="${nivel(pct)}" style="width:${Math.min(100,pct)}%"></span></div>`)+`</div>`;
+}
+
+function svc(i,cor){
+  const st=i.ok?(i.aviso?"warn":""):"err";
+  const txt=i.tipo==="site"?(i.ok?`${i.codigo} · ${i.ms} ms`:(i.codigo?`erro ${i.codigo}`:"sem resposta")):
+    i.ok?(i.aviso?"iniciando":"rodando"):(i.estado||"parado");
+  const linhas=[];
+  if(i.tipo!=="site"&&i.desde&&i.ok)linhas.push(["ligado há",desde(i.desde)]);
+  if(i.tipo==="app"){
+    if(i.cpu)linhas.push(["CPU · RAM",`${i.cpu} · ${i.mem}`]);
+    if(i.reinicios)linhas.push(["reinícios",i.reinicios]);
+    if(!i.ok&&i.texto)linhas.push(["situação",i.texto]);
+  }else if(i.tipo==="site")linhas.push(["endereço",`<span class="mono">${esc(i.id.replace("https://",""))}</span>`]);
+  const log=i.tipo!=="site";
+  return `<div class="card svc ${log?"":"nolog"}" ${log?`data-log="${esc(i.id)}" data-nome="${esc(i.nome)}"`:""}>
+    <div class="svc-h"><div class="ico" style="background:${cor}">${esc(i.nome[0].toUpperCase())}</div>
+      <div style="min-width:0;flex:1"><div class="svc-n">${esc(i.nome)}</div><div class="tag">${i.tipo}</div></div>
+      <span class="pill ${st}"><span class="dot ${st}"></span>${esc(txt)}</span></div>
+    ${linhas.map(([k,v])=>`<div class="row"><span>${k}</span><b>${typeof v==="number"?v:v.startsWith("<")?v:esc(v)}</b></div>`).join("")}
+  </div>`;
+}
+
+function canal(c){
+  if(!c)return"";
+  if(c.erro)return `<div class="card wide"><span class="pill err"><span class="dot err"></span>painel do canal não respondeu</span> <span class="sub">${esc(c.erro)}</span></div>`;
+  const t=c.totais||{};
+  let h=`<div class="card wide"><div class="stats">
+    <div class="stat"><div class="k">Fila de vídeos</div><div class="v">${c.fila}<small> / ${c.meta_fila??"?"}</small></div></div>
+    <div class="stat"><div class="k">Publicados</div><div class="v">${t.videos??0}<small> · ${t.week??0} na semana</small></div></div>
+    <div class="stat"><div class="k">Visualizações</div><div class="v">${(t.views??0).toLocaleString("pt-BR")}</div></div>
+    <div class="stat"><div class="k">Shorts esperando</div><div class="v">${c.shorts_esperando}</div></div>
+    <div class="stat"><div class="k">Leads</div><div class="v">${t.leads??0}</div></div></div>`;
+  for(const r of c.renderizando){
+    const p=r.progresso||{};
+    h+=`<div style="margin:6px 0 10px"><div class="row"><span>🎬 Renderizando: <b>${esc(r.titulo||"#"+r.id)}</b></span><span>${esc(p.label||"")} ${p.pct??0}%${p.eta?` · faltam ~${dur(p.eta)}`:""}</span></div>
+      <div class="bar" style="margin-top:6px"><span style="width:${p.pct||0}%;background:var(--acc)"></span></div></div>`;
+  }
+  h+=`<ul class="list">`;
+  if(c.ultimo)h+=`<li>Último vídeo: ${c.ultimo.video?`<a href="https://youtu.be/${esc(c.ultimo.video)}" target="_blank" rel="noopener">${esc(c.ultimo.titulo)}</a>`:esc(c.ultimo.titulo)} <span class="sub">${quando(c.ultimo.quando)}</span></li>`;
+  h+=`<li>Roteiros: ${c.auto?"aprovação automática":`<b>${c.roteiros}</b> esperando você aprovar`}${c.saude?.last_backup?` <span class="sub">· backup ${esc(c.saude.last_backup)}</span>`:""}</li>`;
+  const f=c.falhas.filter(x=>x.recente);
+  if(f.length)h+=`<li><span class="pill warn"><span class="dot warn"></span>${f.length} roteiro(s) falharam nas últimas 24 h</span> <span class="sub mono">${esc(f[0].erro)}</span></li>`;
+  return h+`</ul></div>`;
+}
+
+let D=null;
+function render(){
+  const s=D.sistema,pr=D.problemas;
+  $("#upd").textContent="Atualizado "+new Date(D.quando*1000).toLocaleTimeString("pt-BR");
+  const erros=pr.filter(p=>p.nivel==="erro"),avisos=pr.filter(p=>p.nivel!=="erro");
+  const cls=erros.length?"err":avisos.length?"warn":"ok";
+  $("#navdot").className="dot "+(cls==="ok"?"":cls);
+  $("#banner").innerHTML=!pr.length?`<div class="banner ok"><b>✓ Tudo funcionando</b>Todos os serviços estão no ar.</div>`:
+    `<div class="banner ${cls}"><b>${erros.length?`✕ ${erros.length} problema(s)`:`! ${avisos.length} aviso(s)`}${erros.length&&avisos.length?` e ${avisos.length} aviso(s)`:""}</b><ul>${pr.map(p=>`<li>${esc(p.texto)}</li>`).join("")}</ul></div>`;
+  const ram=100*s.ram_usada/s.ram_total,dis=100*s.disco_usado/s.disco_total;
+  $("#metrics").innerHTML=metric("CPU",(s.cpu??0)+"%",`${s.nucleos} núcleos · carga ${s.carga[0]}`,s.cpu??0)+
+    metric("Memória",gb(s.ram_usada),`de ${gb(s.ram_total)}`,ram)+
+    metric("Disco",gb(s.disco_usado),`de ${gb(s.disco_total)}`,dis)+
+    metric("Ligado há",dur(s.ligado),`swap ${gb(s.swap_usada)}`,null);
+  $("#navp").innerHTML=D.projetos.map(p=>{const bad=p.itens.some(i=>!i.ok);
+    return `<div class="nav" data-go="p-${p.id}"><span class="sq" style="background:${p.cor}"></span><span class="nm">${esc(p.nome)}</span><span class="dot ${bad?"err":""}"></span></div>`}).join("");
+  $("#projs").innerHTML=D.projetos.map(p=>{
+    const n=p.itens.length,ok=p.itens.filter(i=>i.ok).length;
+    let extra="";
+    if(p.id==="automacao"&&D.reels?.length)extra=`<div class="card" style="margin-top:12px"><div class="sub" style="margin-bottom:4px">Últimos Reels publicados pelos avisos</div><ul class="list mono">${D.reels.map(l=>{
+      const u=l.match(/https:\/\/www\.instagram\.com\/\S+/);return `<li>${esc(l.slice(0,16))} · ${/reel ok/.test(l)?"✓":"✕"} ${esc((l.match(/canal \d/)||[""])[0])} ${u?`<a href="${esc(u[0])}" target="_blank" rel="noopener">ver</a>`:esc(l.slice(20,140))}</li>`}).join("")}</ul></div>`;
+    return `<section class="proj" id="p-${p.id}"><div class="proj-h"><h2><span class="sq" style="width:12px;height:12px;border-radius:3px;background:${p.cor}"></span>${esc(p.nome)}</h2>
+      <span class="pill ${ok<n?"err":""}"><span class="dot ${ok<n?"err":""}"></span>${ok}/${n} no ar</span></div>
+      ${canal(p.canal)}<div class="grid g3">${p.itens.map(i=>svc(i,p.cor)).join("")}</div>${extra}</section>`}).join("");
+}
+
+async function carrega(){
+  try{
+    const r=await fetch("api",{credentials:"same-origin"});
+    if(r.status===401){$("#app").hidden=true;$("#login").hidden=false;return}
+    D=await r.json();
+    $("#login").hidden=true;$("#app").hidden=false;
+    if(D.pronto)render();else $("#banner").innerHTML=`<div class="banner warn"><b>Juntando os dados…</b>Leva uns segundos.</div>`;
+  }catch(e){$("#upd").textContent="Sem conexão com o servidor — tentando de novo"}
+}
+
+$("#lf").onsubmit=async e=>{
+  e.preventDefault();
+  const r=await fetch("login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({senha:$("#senha").value})});
+  if(r.ok){$("#lerr").textContent="";carrega()}else $("#lerr").textContent="Senha incorreta.";
+};
+document.addEventListener("click",async e=>{
+  const go=e.target.closest("[data-go]");
+  if(go){document.getElementById(go.dataset.go)?.scrollIntoView({behavior:"smooth"});$("#navs").classList.remove("open");return}
+  const s=e.target.closest("[data-log]");
+  if(s){
+    $("#mt").textContent="Logs · "+s.dataset.nome;$("#mp").textContent="carregando…";$("#modal").style.display="flex";
+    const r=await fetch("api/logs?alvo="+encodeURIComponent(s.dataset.log));
+    $("#mp").textContent=r.ok?((await r.json()).txt||"(sem linhas)"):"Não consegui ler os logs.";
+    $("#mp").scrollTop=1e9;
+  }
+  if(e.target.id==="modal")fecha();
+});
+$("#burger").onclick=()=>$("#navs").classList.toggle("open");
+function fecha(){$("#modal").style.display="none"}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")fecha()});
+// a página é servida em /status (sem barra); garante que "api" resolva para /status/api
+if(location.pathname==="/status")history.replaceState(null,"","/status/");
+carrega();setInterval(carrega,20000);
+</script>
+</body>
+</html>

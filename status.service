@@ -1,0 +1,12 @@
+[Unit]
+Description=Página de status do servidor
+After=network-online.target docker.service
+
+[Service]
+WorkingDirectory=/opt/status
+Environment=STATUS_SENHA=troque-esta-senha
+ExecStart=/usr/bin/python3 /opt/status/status.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

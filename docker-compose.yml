@@ -1,0 +1,15 @@
+# Só carrega a rota do Traefik para o status.py, que roda no host (systemd, 127.0.0.1:8097).
+# Assim o painel enxerga docker, systemd e /proc do host sem dar o socket do Docker a um contêiner exposto.
+services:
+  status-rota:
+    image: alpine:3.20
+    command: ["sleep", "infinity"]
+    network_mode: host
+    restart: unless-stopped
+    mem_limit: 16m
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.status.rule=Host(`painel.exemplo.com`) && PathPrefix(`/status`)
+      - traefik.http.routers.status.entrypoints=websecure
+      - traefik.http.routers.status.tls.certresolver=letsencrypt
+      - traefik.http.services.status.loadbalancer.server.port=8097
